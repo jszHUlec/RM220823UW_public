@@ -2,24 +2,25 @@
 # pobierz strone 'https://archiwum.mz.gov.pl/zdrowie-i-profilaktyka/grypa/materialy-do-pobrania/'
 # wyciagnij wszystkie elementy 'a' z linkiem do pliku '.pdf' tej strony
 # pobierz plik 'pdf' na swoj komputer
+import re
 
 import requests
 from bs4 import BeautifulSoup
-import os
 
-url = "https://archiwum.mz.gov.pl/zdrowie-i-profilaktyka/grypa/materialy-do-pobrania/"
-response = requests.get(url)
+# Pobierz stronę internetową
+response = requests.get("https://archiwum.mz.gov.pl/zdrowie-i-profilaktyka/grypa/materialy-do-pobrania/")
 
-if response.status_code == 200:
-    soup = BeautifulSoup(response.text, 'html.parser')
-    for a in soup.find_all('a', href=True):
-        link = a['href']
-        if link.endswith('.pdf'):
-            pdf_url = link
-            pdf_filename = os.path.basename(pdf_url)
-            pdf_content = requests.get(pdf_url).content
-            with open(pdf_filename, 'wb') as pdf_file:
-                pdf_file.write(pdf_content)
-                print(f"Downloaded: {pdf_filename}")
-else:
-    print(f"Error: {response.status_code}")
+# Utwórz obiekt BeautifulSoup
+soup = BeautifulSoup(response.content, "html.parser")
+
+# Znajdź wszystkie linki do plików PDF
+links = soup.find_all("a", {"href": re.compile(".*.pdf")})
+
+# Pobierz wszystkie pliki PDF
+for link in links:
+    # Pobierz plik PDF
+    response = requests.get(link["href"])
+    # Zapisz plik PDF
+    filename = link["href"].split("/")[-1]
+    with open(filename, "wb") as f:
+        f.write(response.content)
